@@ -3,7 +3,7 @@
 import * as React from 'react'
 import {View, Text, TouchableOpacity, Alert} from 'react-native'
 
-function MenuButton(props: {
+function CustomButton(props: {
   label?: string
   width?: number
   height?: number
@@ -13,6 +13,7 @@ function MenuButton(props: {
   borderRadius?: number
   labelColor?: string
   onPress?: any
+  fontSize?: number
 }) {
   const {
     label,
@@ -24,6 +25,7 @@ function MenuButton(props: {
     borderRadius,
     labelColor,
     onPress,
+    fontSize,
   } = props
   return (
     <TouchableOpacity
@@ -38,8 +40,15 @@ function MenuButton(props: {
         style={{
           borderWidth: borderWidth ?? 1,
           borderColor: borderColor ?? 'transparent',
+          justifyContent: 'center',
+          flex: 1,
         }}>
-        <Text style={{color: labelColor ?? 'blue'}}>
+        <Text
+          style={{
+            color: labelColor ?? 'blue',
+            textAlign: 'center',
+            fontSize: fontSize ?? 30,
+          }}>
           {label ?? 'Click me!'}
         </Text>
       </View>
@@ -47,4 +56,4 @@ function MenuButton(props: {
   )
 }
 
-export default MenuButton
+export default CustomButton
