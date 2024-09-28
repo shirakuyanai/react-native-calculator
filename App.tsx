@@ -56,6 +56,11 @@ function App() {
         return val * -1
       })
     }
+    if (output !== 0) {
+      setOutput((val: number) => {
+        return val * -1
+      })
+    }
   }
 
   const handlePressPercent = () => {
