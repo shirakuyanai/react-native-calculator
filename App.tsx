@@ -1,7 +1,8 @@
 import React, {useEffect, useState} from 'react'
-import {Alert, SafeAreaView, Text, View} from 'react-native'
-
+import {TouchableOpacity, Text, View, Alert, PanResponder} from 'react-native'
+import Clipboard from '@react-native-clipboard/clipboard'
 import CustomButton from './Components/CustomButton'
+import {SafeAreaView} from 'react-native-safe-area-context'
 
 function App() {
   const [a, setA] = useState(0)
@@ -11,15 +12,35 @@ function App() {
   const [operator, setOperator] = useState('')
   const [selectedOperator, setSelectedOperator] = useState('')
   const [display_result, setDisplayResult] = useState(false)
+  const [displaySize, setDisplaySize] = useState(85)
+  const [displayNumber, setDisplayNumber] = useState(0)
+  const [dotEnabled, setDotEnabled] = useState(false)
+  const [decimalCount, setDecimalCount] = useState(0)
 
   const handlePressNumber = (value: number) => {
     if (leftSide) {
       setA((val: number) => {
-        return val * 10 + value
+        let new_val = 0
+        if (dotEnabled) {
+          setDecimalCount(decimalCount + 1) // Increase decimal count
+          new_val = val + value / Math.pow(10, decimalCount + 1) // Adjust the value by the right decimal place
+        } else {
+          new_val = val * 10 + value // Normal number input
+        }
+
+        return new_val < 999999999 ? new_val : 999999999 // Cap the value
       })
     } else {
       setB((val: number) => {
-        return val * 10 + value
+        let new_val = 0
+        if (dotEnabled) {
+          setDecimalCount(decimalCount + 1) // Increase decimal count
+          new_val = val + value / Math.pow(10, decimalCount + 1) // Adjust the value by the right decimal place
+        } else {
+          new_val = val * 10 + value // Normal number input
+        }
+
+        return new_val < 999999999 ? new_val : 999999999 // Cap the value
       })
       setSelectedOperator('')
     }
@@ -38,6 +59,7 @@ function App() {
   }
 
   const handlePressPercent = () => {
+    if (dotEnabled) setDotEnabled(false)
     if (leftSide) {
       setA((val: number) => {
         return val / 100
@@ -50,25 +72,95 @@ function App() {
   }
 
   const handleCal = () => {
-    if (a === 0 && b === 0) {
-      setOutput(0)
+    if (dotEnabled) setDotEnabled(false)
+    let result = 0
+    if (leftSide) {
+      result = a
     } else {
-      if (operator === '+') {
-        setOutput(a + b)
-      } else if (operator === '-') {
-        setOutput(a - b)
-      } else if (operator === 'X') {
-        setOutput(a * b)
-      } else if (operator === '÷') {
-        setOutput(a / b)
+      if (a === 0 && b === 0) {
+        result = 0
+      } else {
+        switch (operator) {
+          case '+':
+            result = a + b
+            break
+          case '-':
+            result = a - b
+            break
+          case 'X':
+            result = a * b
+            break
+          case '÷':
+            result = a / b
+            break
+          default:
+            break
+        }
       }
     }
-    setA(0)
-    setB(0)
-    setOperator('')
-    setDisplayResult(true)
+    setOutput(result)
+    setA(result) // Set a to the output, allowing further calculations
+    setB(0) // Clear b for the next input
+    setOperator('') // Clear operator
     setSelectedOperator('')
+    setDisplayResult(true)
+    setLeftSide(true) // Reset to left side for the next calculation
   }
+
+  const format_number = (num: number) => {
+    if (Number.isNaN(num)) return '0'
+
+    const absNum = Math.abs(num)
+
+    // If the number is too large or too small, use scientific notation
+    if (absNum >= 1e9 || (absNum <= 1e-6 && absNum !== 0)) {
+      // Convert to scientific notation with 2 decimal places
+      return num.toExponential(2).replace('e+', 'e')
+    }
+
+    // Otherwise, format normally with commas and up to 6 decimal places
+    return new Intl.NumberFormat('en-US', {
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 6,
+    }).format(num)
+    return num
+  }
+
+  useEffect(() => {
+    setDisplayNumber(leftSide ? a : display_result ? output : b !== 0 ? b : a)
+    const current_number = format_number(displayNumber)
+    if (current_number.toString().length > 6 && displaySize !== 54) {
+      setDisplaySize(54)
+    } else if (current_number.toString().length <= 6 && displaySize !== 85) {
+      setDisplaySize(85)
+    }
+  })
+
+  const handleCopy = () => {
+    Clipboard.setString(displayNumber.toString()) // Copy the text to clipboard
+    Alert.alert('Result copied to clipboard!')
+  }
+
+  const handleDeleteLastDigit = () => {
+    if (leftSide) {
+      setA(val => Math.floor(val / 10))
+    } else {
+      setB(val => Math.floor(val / 10))
+    }
+  }
+
+  // Set up PanResponder for swipe detection
+  const panResponder = PanResponder.create({
+    onMoveShouldSetPanResponder: (_, gestureState) => {
+      // If the swipe is horizontal, start responding
+      return Math.abs(gestureState.dx) > Math.abs(gestureState.dy)
+    },
+    onPanResponderRelease: (_, gestureState) => {
+      if (gestureState.dx > 50) {
+        handleDeleteLastDigit()
+      }
+    },
+  })
 
   return (
     <SafeAreaView
@@ -79,16 +171,20 @@ function App() {
         alignItems: 'center',
       }}>
       <View>
-        <View>
-          <Text
-            style={{
-              fontSize: 85,
-              color: 'white',
-              textAlign: 'right',
-              marginRight: 15,
-            }}>
-            {leftSide ? a : display_result ? output : b}
-          </Text>
+        <View {...panResponder.panHandlers}>
+          <TouchableOpacity activeOpacity={1} onLongPress={() => handleCopy()}>
+            <Text
+              style={{
+                fontSize: displaySize ?? 85,
+                color: 'white',
+                textAlign: 'right',
+                marginRight: 15,
+              }}>
+              {dotEnabled && displayNumber % 1 === 0
+                ? format_number(displayNumber) + '.'
+                : format_number(displayNumber)}
+            </Text>
+          </TouchableOpacity>
         </View>
         <View style={{display: 'flex', flexDirection: 'row', gap: 10}}>
           <CustomButton
@@ -102,6 +198,8 @@ function App() {
               setDisplayResult(false)
               setSelectedOperator('')
               setLeftSide(true)
+              setDotEnabled(false)
+              setDecimalCount(0)
             }}
             labelColor="black"
             width={80}
@@ -131,12 +229,14 @@ function App() {
             label="÷"
             labelColor={selectedOperator === '÷' ? 'orange' : 'white'}
             onPress={() => {
-              if (operator) {
+              if (operator && b !== 0) {
                 handleCal()
               }
               if (output !== 0) {
                 setA(output)
               }
+              if (dotEnabled) setDotEnabled(false)
+              setDisplayResult(false)
               setOperator('÷')
               setSelectedOperator('÷')
               setLeftSide(false)
@@ -186,12 +286,14 @@ function App() {
             label="X"
             labelColor={selectedOperator === 'X' ? 'orange' : 'white'}
             onPress={() => {
-              if (operator) {
+              if (operator && b !== 0) {
                 handleCal()
               }
               if (output !== 0) {
                 setA(output)
               }
+              if (dotEnabled) setDotEnabled(false)
+              setDisplayResult(false)
               setOperator('X')
               setSelectedOperator('X')
               setLeftSide(false)
@@ -240,12 +342,14 @@ function App() {
             label="-"
             labelColor={selectedOperator === '-' ? 'orange' : 'white'}
             onPress={() => {
-              if (operator) {
+              if (operator && b !== 0) {
                 handleCal()
               }
               if (output !== 0) {
                 setA(output)
               }
+              if (dotEnabled) setDotEnabled(false)
+              setDisplayResult(false)
               setOperator('-')
               setSelectedOperator('-')
               setLeftSide(false)
@@ -295,12 +399,14 @@ function App() {
             label="+"
             labelColor={selectedOperator === '+' ? 'orange' : 'white'}
             onPress={() => {
-              if (operator) {
+              if (operator && b !== 0) {
                 handleCal()
               }
               if (output !== 0) {
                 setA(output)
               }
+              if (dotEnabled) setDotEnabled(false)
+              setDisplayResult(false)
               setOperator('+')
               setSelectedOperator('+')
               setLeftSide(false)
@@ -329,8 +435,11 @@ function App() {
           />
           <CustomButton
             backgroundColor="#383838"
-            label=","
+            label="."
             labelColor="white"
+            onPress={() => {
+              if (!dotEnabled && displayNumber < 999999999) setDotEnabled(true)
+            }}
             width={80}
             fontSize={45}
             height={80}
