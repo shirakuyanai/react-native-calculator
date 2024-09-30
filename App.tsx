@@ -147,10 +147,45 @@ function App() {
   }
 
   const handleDeleteLastDigit = () => {
-    if (leftSide) {
-      setA(val => Math.floor(val / 10))
+    if (leftSide ? a : display_result ? output : b !== 0 ? b : a) {
+      setA(val => {
+        const stringValue = val.toString()
+        let newValue = stringValue.slice(0, -1)
+        if (newValue[newValue.length - 1] === '.') {
+          newValue = newValue.slice(0, -1)
+
+          setDotEnabled(false)
+        }
+        if (decimalCount > 1) setDecimalCount(decimalCount - 1)
+
+        return newValue ? Number(newValue) : 0
+      })
     } else {
-      setB(val => Math.floor(val / 10))
+      if (display_result) {
+        setOutput(val => {
+          const stringValue = val.toString()
+          let newValue = stringValue.slice(0, -1)
+          if (newValue[newValue.length - 1] === '.') {
+            newValue = newValue.slice(0, -1)
+            setDotEnabled(false)
+          }
+          if (decimalCount > 1) setDecimalCount(decimalCount - 1)
+
+          return newValue ? Number(newValue) : 0
+        })
+      } else {
+        setB(val => {
+          const stringValue = val.toString()
+          let newValue = stringValue.slice(0, -1)
+          if (newValue[newValue.length - 1] === '.') {
+            newValue = newValue.slice(0, -1)
+            setDotEnabled(false)
+          }
+          if (decimalCount > 1) setDecimalCount(decimalCount - 1)
+
+          return newValue ? Number(newValue) : 0
+        })
+      }
     }
   }
 
@@ -167,6 +202,9 @@ function App() {
     },
   })
 
+  useEffect(() => {
+    console.log(decimalCount)
+  }, [decimalCount])
   return (
     <SafeAreaView
       style={{
@@ -240,6 +278,7 @@ function App() {
               if (output !== 0) {
                 setA(output)
               }
+              setDecimalCount(0)
               if (dotEnabled) setDotEnabled(false)
               setDisplayResult(false)
               setOperator('÷')
@@ -297,6 +336,7 @@ function App() {
               if (output !== 0) {
                 setA(output)
               }
+              setDecimalCount(0)
               if (dotEnabled) setDotEnabled(false)
               setDisplayResult(false)
               setOperator('X')
@@ -353,6 +393,7 @@ function App() {
               if (output !== 0) {
                 setA(output)
               }
+              setDecimalCount(0)
               if (dotEnabled) setDotEnabled(false)
               setDisplayResult(false)
               setOperator('-')
@@ -410,6 +451,7 @@ function App() {
               if (output !== 0) {
                 setA(output)
               }
+              setDecimalCount(0)
               if (dotEnabled) setDotEnabled(false)
               setDisplayResult(false)
               setOperator('+')
