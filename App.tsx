@@ -128,7 +128,6 @@ function App() {
       minimumFractionDigits: 0,
       maximumFractionDigits: 6,
     }).format(num)
-    return num
   }
 
   useEffect(() => {
@@ -202,9 +201,6 @@ function App() {
     },
   })
 
-  useEffect(() => {
-    console.log(decimalCount)
-  }, [decimalCount])
   return (
     <SafeAreaView
       style={{
