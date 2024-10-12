@@ -65,7 +65,7 @@ function App() {
   }
 
   const handlePressPercent = () => {
-    if (dotEnabled) setDotEnabled(false)
+    if (!dotEnabled) setDotEnabled(true)
     if (leftSide) {
       setA((val: number) => {
         return val / 100
@@ -75,6 +75,7 @@ function App() {
         return val / 100
       })
     }
+    setDecimalCount(decimalCount + 2)
   }
 
   const handleCal = () => {
