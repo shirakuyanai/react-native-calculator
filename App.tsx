@@ -49,7 +49,7 @@ function App() {
   }
 
   const handlePressInverse = () => {
-    if (leftSide) {
+    if (leftSide || (!display_result && b === 0)) {
       setA((val: number) => {
         return val * -1
       })
@@ -59,9 +59,8 @@ function App() {
       })
     }
     if (output !== 0) {
-      setOutput((val: number) => {
-        return val * -1
-      })
+      setA(displayNumber * -1)
+      setLeftSide(true)
     }
   }
 
