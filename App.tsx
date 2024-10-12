@@ -20,6 +20,7 @@ function App() {
   const handlePressNumber = (value: number) => {
     if (leftSide) {
       setA((val: number) => {
+        if (val.toString().length >= 9) return val
         let new_val = 0
         if (dotEnabled) {
           setDecimalCount(decimalCount + 1) // Increase decimal count
@@ -28,10 +29,11 @@ function App() {
           new_val = val * 10 + value // Normal number input
         }
 
-        return new_val < 999999999 ? new_val : 999999999 // Cap the value
+        return new_val
       })
     } else {
       setB((val: number) => {
+        if (val.toString().length >= 9) return val
         let new_val = 0
         if (dotEnabled) {
           setDecimalCount(decimalCount + 1) // Increase decimal count
@@ -40,7 +42,7 @@ function App() {
           new_val = val * 10 + value // Normal number input
         }
 
-        return new_val < 999999999 ? new_val : 999999999 // Cap the value
+        return new_val
       })
       setSelectedOperator('')
     }
@@ -146,7 +148,7 @@ function App() {
   }
 
   const handleDeleteLastDigit = () => {
-    if (leftSide ? a : display_result ? output : b !== 0 ? b : a) {
+    if (leftSide || (!display_result && b === 0)) {
       setA(val => {
         const stringValue = val.toString()
         let newValue = stringValue.slice(0, -1)
@@ -272,7 +274,7 @@ function App() {
                 handleCal()
               }
               if (output !== 0) {
-                setA(output)
+                setA(displayNumber)
               }
               setDecimalCount(0)
               if (dotEnabled) setDotEnabled(false)
@@ -330,7 +332,7 @@ function App() {
                 handleCal()
               }
               if (output !== 0) {
-                setA(output)
+                setA(displayNumber)
               }
               setDecimalCount(0)
               if (dotEnabled) setDotEnabled(false)
@@ -387,7 +389,7 @@ function App() {
                 handleCal()
               }
               if (output !== 0) {
-                setA(output)
+                setA(displayNumber)
               }
               setDecimalCount(0)
               if (dotEnabled) setDotEnabled(false)
@@ -445,7 +447,7 @@ function App() {
                 handleCal()
               }
               if (output !== 0) {
-                setA(output)
+                setA(displayNumber)
               }
               setDecimalCount(0)
               if (dotEnabled) setDotEnabled(false)
